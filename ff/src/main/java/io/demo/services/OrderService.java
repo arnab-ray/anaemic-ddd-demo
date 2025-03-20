@@ -53,6 +53,8 @@ public class OrderService implements IOrderService {
 
             ffOrderRepository.save(fulfilOrder);
             ffOrderItemRepository.saveAll(fulfilOrderItems);
+
+            // TODO: Why should a domain service bother about the means of event?
             kafkaProducer.sendMessage(FF_TOPIC, fulfilOrder.getOrderId(), fulfilOrder.getOrderId());
         }
     }
@@ -68,6 +70,10 @@ public class OrderService implements IOrderService {
         }
 
         var fulfilOrderItems = ffOrderItemRepository.findByFulfilOrderId(fulfilOrderId.toString());
+
+        if (fulfilOrderItems.isEmpty()) {
+            throw new NotFoundException("fulfil order items not found!");
+        }
 
         for (FulfilOrderItem fulfilOrderItem : fulfilOrderItems) {
             // TODO: Why the client should know the exact state of order for comparison?

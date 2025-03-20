@@ -91,6 +91,7 @@ public class OrderService implements IOrderService {
                         warehouseService.reserveInventory(
                                 fulfilOrderItem.getListingId(), fulfilOrderItem.getWarehouse(),
                                 fulfilOrderItem.getQuantity());
+                        reserveFFOrderItem(fulfilOrderItem);
                     } else {
                         var otherWhInventory =
                                 inventories.stream()
@@ -104,6 +105,7 @@ public class OrderService implements IOrderService {
                         warehouseService.reserveInventory(
                                 fulfilOrderItem.getListingId(), otherWhInventory.get().getWarehouseId(),
                                 fulfilOrderItem.getQuantity());
+                        reserveFFOrderItem(fulfilOrderItem);
                     }
                 } catch (Exception e) {
                     // Do Nothing
@@ -111,6 +113,11 @@ public class OrderService implements IOrderService {
                 }
             }
         }
+    }
+
+    private void reserveFFOrderItem(FulfilOrderItem fulfilOrderItem) {
+        fulfilOrderItem.setStatus(OrderItemState.RESERVED);
+        ffOrderItemRepository.save(fulfilOrderItem);
     }
 
     private boolean isValidCatalog(String listingId) {

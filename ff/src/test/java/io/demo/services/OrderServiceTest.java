@@ -5,12 +5,14 @@ import io.demo.catalog.models.BookDetailsDTO;
 import io.demo.exceptions.NotFoundException;
 import io.demo.models.Order;
 import io.demo.models.OrderItem;
+import io.demo.models.OrderItemState;
 import io.demo.publishers.KafkaProducer;
 import io.demo.repositories.FFOrderItemRepository;
 import io.demo.repositories.FFOrderRepository;
 import io.demo.repositories.InventoryRepository;
 import io.demo.repositories.ReservationRepository;
 import io.demo.repositories.entities.FulfilOrder;
+import io.demo.repositories.entities.FulfilOrderItem;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -84,6 +86,18 @@ public class OrderServiceTest {
             Exception e = Assertions.assertThrows(NotFoundException.class, () -> orderService.fulfillOrder(123L));
             assertThat(e.getMessage()).isEqualTo("fulfil order items not found!");
         }
+
+        @Test
+        void testWhenOrderIsAlreadyReserved() {
+            when(ffOrderRepository.findById(123L)).thenReturn(Optional.of(getFulfilOrder()));
+            when(ffOrderItemRepository.findByFulfilOrderId("123"))
+                    .thenReturn(getFulfilOrderItems(OrderItemState.RESERVED, "WH1"));
+
+            orderService.fulfillOrder(123L);
+
+            verify(inventoryRepository, times(0)).findByListingId(anyString());
+            verify(inventoryRepository, times(0)).save(any());
+        }
     }
 
     private FulfilOrder getFulfilOrder() {
@@ -92,6 +106,17 @@ public class OrderServiceTest {
                 .orderId("OD123")
                 .addressId("ADDR23")
                 .build();
+    }
+
+    private List<FulfilOrderItem> getFulfilOrderItems(OrderItemState orderItemState, String warehouseId) {
+        return List.of(
+                FulfilOrderItem.builder()
+                        .fulfilOrderId("FF123").orderItemId("O1").status(orderItemState).warehouse(warehouseId)
+                        .quantity(23).priceInPaise(34500).listingId("LST123").build(),
+                FulfilOrderItem.builder()
+                        .fulfilOrderId("FF123").orderItemId("O2").status(orderItemState).warehouse(warehouseId)
+                        .quantity(12).priceInPaise(54500).listingId("LST124").build()
+        );
     }
 
     private Order getOrder() {

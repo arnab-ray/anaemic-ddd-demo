@@ -13,6 +13,7 @@ import lombok.*;
 @Builder
 @Table(name = "inventories")
 public class Inventory extends BaseEntity {
+    // TODO: What is the point of such data containers? Are we leveraging the power of OOP appropriately?
     @Column(name = "listing_id")
     private String listingId;
 

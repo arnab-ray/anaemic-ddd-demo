@@ -1,0 +1,69 @@
+server:
+  port: 8085
+  undertow:
+    threads:
+      worker: 64
+      io: 8
+
+spring:
+  application:
+    name: anaemic-ddd-demo
+  profiles:
+    active: local
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.session.SessionAutoConfiguration
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/ddd_demo?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&useSSL=false
+    username: root
+    password:
+    jpa:
+      ddl-auto: create
+      generate-ddl: true
+  jpa:
+    database: MYSQL
+    openInView: false
+    show_sql: false
+    generate-ddl: false
+    hibernate:
+      naming-strategy: org.springframework.boot.orm.jpa.hibernate.SpringNamingStrategy
+      generate_statistics: true
+      format_sql: true
+    properties:
+      hibernate.cache.user_second_level_cache: false
+      hibernate.cache.use_query_cache: false
+      hibernate.generate_statistics: false
+      org.hibernate.envers.audit_table_suffix: _history
+      hibernate.jdbc.time_zone: Asia/Kolkata
+      hibernate.jdbc.batch_size: 100
+  kafka:
+    bootstrap-servers: localhost:9092
+    concurrency:
+      default: 1
+    groupId: dddDemo
+    consumer:
+      session-timeout-ms: 60000
+      heartbeat-interval-ms: 3000
+
+management:
+  endpoints:
+    web.exposure.include: '*'
+    metrics.enabled: true
+    prometheus.enabled: true
+    health.show-details: always
+  metrics:
+    export.prometheus.enabled: true
+    tags.application: ${spring.application.name}
+    distribution:
+      percentile-histogram:
+        http.server.requests: true
+        resilience4j.circuitbreaker.calls: true
+  health:
+    diskspace.enabled: false
+    circuitbreakers.enabled: true
+    ratelimiters.enabled: false
+    redis.enabled: false
+
+topic:
+  order.request: order-request
+  ff.order.request: ff-order-request
